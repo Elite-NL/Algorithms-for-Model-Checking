@@ -64,22 +64,18 @@ class LTS {
     }
 
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("LTS(").append(this.states);
-        sb.append(", ").append(this.first_state);
-        sb.append(", ").append(this.transitions);
-        sb.append(")");
-        return sb.toString();
+        return "LTS(Start="+ this.first_state + ", #transitions=" + this.nr_of_transitions + ", #states=" + this.nr_of_states + ")";
     }
 }
 
 public class ModelChecker {
+    LTS lts;
 
     /**
      * Read the input LTS in Aldebaran format from an .aut file.
      * @throws IOException
      */
-    LTS readLTS(String filename) throws IOException {
+    void readLTS(String filename) throws IOException {
 
         File file = new File(filename);
         Scanner scanner = new Scanner(file);
@@ -93,7 +89,7 @@ public class ModelChecker {
         // strip off the parentheses and split on comma
         String[] header = parts[1].substring(1, parts[1].length() - 1).split(",");
 
-        LTS lts = new LTS(Integer.parseInt(header[0]), Integer.parseInt(header[1]), Integer.parseInt(header[2]));
+        this.lts = new LTS(Integer.parseInt(header[0]), Integer.parseInt(header[1]), Integer.parseInt(header[2]));
 
         for (int i = 0; i < lts.nr_of_transitions; i++) {
             if (!scanner.hasNextLine()) {
@@ -112,20 +108,40 @@ public class ModelChecker {
         }
 
         scanner.close();
-        return lts;
+    }
+
+    /**
+     * Reads a mu-calculus formula from an .mcf file.
+     * @throws IOException
+     */
+    void readFormula(String filename) throws IOException { // TODO: implement
+        File file = new File(filename);
+        Scanner scanner = new Scanner(file);
+
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            System.out.println(line);
+        }
+
+        scanner.close();
     }
 
     public static void main(String[] args) throws Exception {
         ModelChecker modelChecker = new ModelChecker();
 
         Scanner scanner = new Scanner(System.in);
-        System.out.print("Enter the .aut filename: ");
-        String filename = scanner.nextLine();
-        filename = "dining/dining_2.aut"; // TODO remove hardcode before submission
+        System.out.print("Enter the LTS filename (.aut): ");
+        String lts_filename = scanner.nextLine();
+        lts_filename = "dining/dining_2.aut"; // TODO remove hardcode before submission
 
-        LTS lts = modelChecker.readLTS(filename);
+        modelChecker.readLTS(lts_filename);
+        System.out.println(modelChecker.lts);
 
-        System.out.println(lts);
+        System.out.println("Enter the mu-calculus formula filename (.mcf): ");
+        String formula_filename = scanner.nextLine();
+        formula_filename = "dining/invariantly_inevitably_eat.mcf"; // TODO remove hardcode before submission
+
+        modelChecker.readFormula(formula_filename);
 
         scanner.close();
     }
