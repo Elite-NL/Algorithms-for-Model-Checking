@@ -24,8 +24,8 @@ public class ModelChecker {
 
         System.out.println("Enter the mu-calculus formula filename (.mcf): ");
         String formula_filename = scanner.nextLine();
-        // formula_filename = "dining/invariantly_inevitably_eat.mcf"; // TODO remove hardcode before submission
-        formula_filename = "testcases/combined/form5.mcf"; // TODO remove hardcode before submission
+        formula_filename = "dining/invariantly_inevitably_eat.mcf"; // TODO remove hardcode before submission
+        // formula_filename = "testcases/combined/form5.mcf"; // TODO remove hardcode before submission
 
         modelChecker.formula = parsing.readFormula(formula_filename);
         System.out.println(modelChecker.formula);

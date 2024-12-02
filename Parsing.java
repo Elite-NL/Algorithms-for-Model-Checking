@@ -51,10 +51,11 @@ public class Parsing {
     }
 
     int i = 0; // index for parsing the formula, this needs to be global so it can be incremented in all subfunctions
-    String recursion_variable_first_set = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; // first set of characters in a recursion variable
-    String formula_first_set = "tfABCDEFGHIJKLMNOPQRSTUVWXYZ(mn<["; // first set of characters in a formula
-    String operator_first_set = "|&"; // first set of characters in an operator
-    String action_name_first_set = "abcdefghijklmnopqrstuvwxyz"; // first set of characters in an action name
+    static String recursion_variable_first_set = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; // first set of characters in a recursion variable
+    static String formula_first_set = recursion_variable_first_set + "tf(mn<["; // first set of characters in a formula
+    static String operator_first_set = "|&"; // first set of characters in an operator
+    static String action_name_first_set = "abcdefghijklmnopqrstuvwxyz"; // first set of characters in an action name
+    static String action_name_set = action_name_first_set + "0123456789_"; // followup set of characters in an action name
 
     /**
      * Reads a mu/nu-calculus formula from an .mcf file.
@@ -67,28 +68,26 @@ public class Parsing {
         Formula formula = new TrueFormula(); // default formula, should be overwritten in the loop
 
         while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
+            // Read the next line and strip whitespace
+            String line = scanner.nextLine().strip();
 
             // Skip empty lines & comments (%)
-            if (line.isEmpty() || line.strip().startsWith("%")) {
+            if (line.isEmpty() || line.startsWith("%")) {
                 continue;
             }
 
             // Loop through the formula
             i = 0; // index for parsing the formula, this needs to be global so it can be incremented in all subfunctions
-            char c = line.charAt(i);
-
-            // Skip whitespace
-            skipWhiteSpace(line);
 
             // first 'real' character should be 't', 'f', 'A...Z', '(', 'm', 'n', '<' or '['
-            if (c != 't' && c != 'f' && !Character.isUpperCase(c) && c != '(' && c != 'm' && c != 'n' && c != '<' && c != '[') {
+            if (!formula_first_set.contains(line.substring(i, i+1))) {
                 scanner.close();
                 throw new IOException("Parse error: invalid first character in formula");
             }
             formula = parseFormula(line);
             break;
         }
+
         scanner.close();
         return formula;
     }
@@ -118,12 +117,8 @@ public class Parsing {
                 // Box Formula
                 return parseDiamondBoxFormula(line, "[]");
             default:
-                if (recursion_variable_first_set.contains(line.substring(i, i+1))) {
-                    // Recursion Variable
-                    return parseRecursionVariable(line);
-                } else {
-                    throw new IOException("Parse error: invalid character in formula");
-                }
+                // Recursion Variable
+                return parseRecursionVariable(line);
         }
     }
 
@@ -150,36 +145,30 @@ public class Parsing {
         expect(line, "(");
         skipWhiteSpace(line);
         // check if the next character is in formula_first_set
-        Formula f;
-        if (formula_first_set.contains(line.substring(i, i+1))) {
-            f = parseFormula(line);
-        } else {
+        if (!formula_first_set.contains(line.substring(i, i+1))) {
             throw new IOException("Parse error: invalid character in formula");
         }
+        Formula f = parseFormula(line);
 
         // check if the next character is in operator_first_set
-        String operator = "";
-        if (operator_first_set.contains(line.substring(i, i+1))) {
-            operator = parseOperator(line);
-        } else {
+        if (!operator_first_set.contains(line.substring(i, i+1))) {
             throw new IOException("Parse error: invalid character in formula");
         }
+        String operator = parseOperator(line);
+
         // check if the next character is in formula_first_set
-        Formula g;
-        if (formula_first_set.contains(line.substring(i, i+1))) {
-            g = parseFormula(line);
-        } else {
+        if (!formula_first_set.contains(line.substring(i, i + 1))) {
             throw new IOException("Parse error: invalid character in formula");
         }
+        Formula g = parseFormula(line);
+
         expect(line, ")");
         skipWhiteSpace(line);
 
         if (operator.equals("&&")) {
             return new AndFormula(f, g);
-        } else if (operator.equals("||")) {
+        } else { // operator.equals("||")
             return new OrFormula(f, g);
-        } else {
-            throw new IOException("Parse error: invalid operator");
         }
     }
 
@@ -206,22 +195,20 @@ public class Parsing {
     Formula parseMuNuFormula(String line, String fixedPoint) throws IOException {
         expect(line, fixedPoint);
         requireWhiteSpace(line);
-        Formula r;
-        if (recursion_variable_first_set.contains(line.substring(i, i+1))) {
-            r = parseRecursionVariable(line);
-        } else {
+
+        if (!recursion_variable_first_set.contains(line.substring(i, i+1))) {
             throw new IOException("Parse error: expected recursion variable");
         }
+        Formula r = parseRecursionVariable(line);
 
         expect(line, ".");
         skipWhiteSpace(line);
 
-        Formula f;
-        if (formula_first_set.contains(line.substring(i, i+1))) {
-            f = parseFormula(line);
-        } else {
-            throw new IOException("Parse error: expected formula");
+        // check if the next character is in formula_first_set
+        if (!formula_first_set.contains(line.substring(i, i+1))) {
+            throw new IOException("Parse error: invalid character in formula");
         }
+        Formula f = parseFormula(line);
 
         if (fixedPoint.equals("mu")) {
             return new MuFormula(r, f);
@@ -233,21 +220,20 @@ public class Parsing {
     Formula parseDiamondBoxFormula(String line, String modalOperator) throws IOException {
         expect(line, modalOperator.substring(0, 1));
         skipWhiteSpace(line);
-        String a;
-        if (action_name_first_set.contains(line.substring(i, i+1))) {
-            a = parseActionName(line);
-        } else {
+
+        if (!action_name_first_set.contains(line.substring(i, i+1))) {
             throw new IOException("Parse error: expected action name");
         }
+        String a = parseActionName(line);
 
         expect(line, modalOperator.substring(1, 2));
         skipWhiteSpace(line);
-        Formula f;
-        if (formula_first_set.contains(line.substring(i, i+1))) {
-            f = parseFormula(line);
-        } else {
-            throw new IOException("Parse error: expected formula");
+
+        // check if the next character is in formula_first_set
+        if (!formula_first_set.contains(line.substring(i, i + 1))) {
+            throw new IOException("Parse error: invalid character in formula");
         }
+        Formula f = parseFormula(line);
 
         if (modalOperator.equals("<>")) {
             return new DiamondFormula(a, f);
@@ -258,7 +244,7 @@ public class Parsing {
 
     String parseActionName(String line) {
         String action = "";
-        while (action_name_first_set.contains(line.substring(i, i+1))) {
+        while (action_name_set.contains(line.substring(i, i+1))) {
             action += line.charAt(i);
             i++;
         }
