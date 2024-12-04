@@ -46,7 +46,7 @@ class State {
     }
 
     public String toString() {
-        return "s_" + this.id;
+        return "" + this.id;
     }
 }
 
@@ -101,17 +101,6 @@ public class LTS {
 
     public Set<Transition> getTransitionsWithAction(String action) {
         Set<Transition> transitionwithlabel = transitions.get(action);
-
-        if (!transitions.containsKey(action)) {
-            System.out.println("problematic code here vvvv");
-            // System.out.println(transitions);
-            System.out.println(action);
-            System.out.println(transitions.keySet());
-            System.out.println(transitions.containsKey(action));
-            System.out.println(transitions.get(action));
-            System.out.println("wtf is happening here ^^^^");
-        }
-
         if (transitionwithlabel != null) {
             return transitionwithlabel;
         } else {

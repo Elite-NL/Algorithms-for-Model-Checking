@@ -39,11 +39,11 @@ public class Parsing {
                 scanner.close();
                 throw new IOException("Invalid file format");
             }
-            if (Integer.parseInt(parts[0]) >= lts.nr_of_states || Integer.parseInt(parts[2]) >= lts.nr_of_states){
-                scanner.close();
-                throw new IOException("Invalid state id in transition");
-            }
-            lts.addTransition(Integer.parseInt(parts[0]), parts[1], Integer.parseInt(parts[2]));
+            int start_state_id = Integer.parseInt(parts[0]);
+            // strip off the quotes from the action name
+            String action = parts[1].substring(1, parts[1].length() - 1);
+            int end_state_id = Integer.parseInt(parts[2]);
+            lts.addTransition(start_state_id, action, end_state_id);
         }
 
         scanner.close();
@@ -65,7 +65,7 @@ public class Parsing {
         File file = new File(filename);
         Scanner scanner = new Scanner(file);
 
-        Formula formula = new TrueFormula(); // default formula, should be overwritten in the loop
+        Formula formula = null; // should be overwritten in the loop
 
         while (scanner.hasNextLine()) {
             // Read the next line
@@ -77,20 +77,27 @@ public class Parsing {
 
             // Skip empty lines
             if (!line.isEmpty()) {
-                i = 0; // index for parsing the formula, this needs to be global so it can be incremented in all subfunctions
-
-                // first 'real' character should be 't', 'f', 'A...Z', '(', 'm', 'n', '<' or '['
-                if (!formula_first_set.contains(line.substring(i, i+1))) {
-                    scanner.close();
-                    throw new IOException("Parse error: invalid first character in formula");
-                }
-                formula = parseFormula(line);
+                formula = parse(line);
                 break;
             }
         }
-
         scanner.close();
+
+        if (formula == null) {
+            throw new IOException("The input file does not contain a formula");
+        }
+
         return formula;
+    }
+
+    Formula parse(String line) throws IOException {
+        i = 0; // index for parsing the formula, this needs to be global so it can be incremented in all subfunctions
+        skipWhiteSpace(line);
+        // first 'real' character should be 't', 'f', 'A...Z', '(', 'm', 'n', '<' or '['
+        if (!formula_first_set.contains(line.substring(i, i+1))) {
+            throw new IOException("Parse error: invalid first character in formula");
+        }
+        return parseFormula(line);
     }
 
     Formula parseFormula(String line) throws IOException {

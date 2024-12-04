@@ -26,10 +26,6 @@ public class ModelChecker {
 
         modelChecker.lts = parsing.readLTS(lts_filename);
         System.out.println(modelChecker.lts);
-        System.out.println("test123");
-        System.out.println(modelChecker.lts.transitions);
-        System.out.println(modelChecker.lts.getTransitionsWithAction("tau"));
-        // System.out.println(modelChecker.lts.first_state.getOutgoingTransitions("tau"));
 
         System.out.print("Enter the mu-calculus formula filename (.mcf): ");
         String formula_filename;
@@ -42,12 +38,23 @@ public class ModelChecker {
         // formula_filename = "testcases/combined/form2.mcf";
 
         // modelChecker.formula = parsing.readFormula(formula_filename);
-        modelChecker.formula = parsing.parseFormula("<tau>true"); // TODO remove hardcode before submission
+        modelChecker.formula = parsing.parse("<tau>true"); // TODO remove hardcode before submission
         System.out.println(modelChecker.formula);
 
         // evaluate the formula on the LTS
-        Set<State> result = modelChecker.formula.evaluate(modelChecker.lts);
-        System.out.println(result);
+        Set<State> satisfying_states = modelChecker.formula.evaluate(modelChecker.lts);
+
+        // we sort the states to make the output more readable
+        List<State> satisfying_states_list = new ArrayList<>(satisfying_states);
+        satisfying_states_list.sort((state1, state2) -> Integer.compare(state1.id, state2.id));
+        System.out.println("The formula: " + modelChecker.formula + " is satisfied by the following states of the LTS:");
+        System.out.println(satisfying_states_list);
+        System.out.println(satisfying_states_list.contains(modelChecker.lts.first_state));
+        System.out.println("The first state of the LTS: " + modelChecker.lts.first_state + " is "
+            + (satisfying_states_list.contains(modelChecker.lts.first_state)?"" : "not ")
+            + "in the satisfying states");
+
+
 
         scanner.close();
     }
