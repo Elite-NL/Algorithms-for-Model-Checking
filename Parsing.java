@@ -26,7 +26,7 @@ public class Parsing {
 
         LTS lts = new LTS(Integer.parseInt(header[0]), Integer.parseInt(header[1]), Integer.parseInt(header[2]));
 
-        for (int i = 0; i < lts.nr_of_transitions; i++) {
+        for (int j = 0; j < lts.nr_of_transitions; j++) {
             if (!scanner.hasNextLine()) {
                 scanner.close();
                 throw new IOException("The input file does not contain enough transitions");
@@ -68,24 +68,25 @@ public class Parsing {
         Formula formula = new TrueFormula(); // default formula, should be overwritten in the loop
 
         while (scanner.hasNextLine()) {
-            // Read the next line and strip whitespace
-            String line = scanner.nextLine().strip();
+            // Read the next line
+            String line = scanner.nextLine();
 
-            // Skip empty lines & comments (%)
-            if (line.isEmpty() || line.startsWith("%")) {
-                continue;
+            // Remove comments, everything after a '%' is a comment
+            // and strip whitespace
+            line = line.split("%")[0].strip();
+
+            // Skip empty lines
+            if (!line.isEmpty()) {
+                i = 0; // index for parsing the formula, this needs to be global so it can be incremented in all subfunctions
+
+                // first 'real' character should be 't', 'f', 'A...Z', '(', 'm', 'n', '<' or '['
+                if (!formula_first_set.contains(line.substring(i, i+1))) {
+                    scanner.close();
+                    throw new IOException("Parse error: invalid first character in formula");
+                }
+                formula = parseFormula(line);
+                break;
             }
-
-            // Loop through the formula
-            i = 0; // index for parsing the formula, this needs to be global so it can be incremented in all subfunctions
-
-            // first 'real' character should be 't', 'f', 'A...Z', '(', 'm', 'n', '<' or '['
-            if (!formula_first_set.contains(line.substring(i, i+1))) {
-                scanner.close();
-                throw new IOException("Parse error: invalid first character in formula");
-            }
-            formula = parseFormula(line);
-            break;
         }
 
         scanner.close();
@@ -134,7 +135,7 @@ public class Parsing {
         return new FalseFormula();
     }
 
-    Formula parseRecursionVariable(String line) throws IOException {
+    VariableFormula parseRecursionVariable(String line) {
         String variable = line.substring(i, i+1);
         i++;
         skipWhiteSpace(line);
@@ -146,19 +147,19 @@ public class Parsing {
         skipWhiteSpace(line);
         // check if the next character is in formula_first_set
         if (!formula_first_set.contains(line.substring(i, i+1))) {
-            throw new IOException("Parse error: invalid character in formula");
+            throw new IOException("Parse error: " + line.substring(i, i+1) +" is not a valid character in a formula");
         }
         Formula f = parseFormula(line);
 
         // check if the next character is in operator_first_set
         if (!operator_first_set.contains(line.substring(i, i+1))) {
-            throw new IOException("Parse error: invalid character in formula");
+            throw new IOException("Parse error: " + line.substring(i, i+1) +" is not a valid character in a binary operator");
         }
         String operator = parseOperator(line);
 
         // check if the next character is in formula_first_set
         if (!formula_first_set.contains(line.substring(i, i + 1))) {
-            throw new IOException("Parse error: invalid character in formula");
+            throw new IOException("Parse error: " + line.substring(i, i+1) +" is not a valid character in a formula");
         }
         Formula g = parseFormula(line);
 
@@ -199,7 +200,7 @@ public class Parsing {
         if (!recursion_variable_first_set.contains(line.substring(i, i+1))) {
             throw new IOException("Parse error: expected recursion variable");
         }
-        Formula r = parseRecursionVariable(line);
+        VariableFormula r = parseRecursionVariable(line);
 
         expect(line, ".");
         skipWhiteSpace(line);
@@ -243,12 +244,12 @@ public class Parsing {
     }
 
     String parseActionName(String line) {
-        String action = "";
+        StringBuilder action = new StringBuilder();
         while (action_name_set.contains(line.substring(i, i+1))) {
-            action += line.charAt(i);
+            action.append(line.charAt(i));
             i++;
         }
-        return action;
+        return action.toString();
     }
 
     void expect(String line, String expected) throws IOException {
