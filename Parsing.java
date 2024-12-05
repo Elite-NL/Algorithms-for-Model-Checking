@@ -73,7 +73,7 @@ public class Parsing {
 
             // Remove comments, everything after a '%' is a comment
             // and strip whitespace
-            line = line.split("%")[0].strip();
+            line = line.split("%")[0].trim();
 
             // Skip empty lines
             if (!line.isEmpty()) {

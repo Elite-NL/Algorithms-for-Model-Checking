@@ -32,7 +32,8 @@ class State {
     // we need to override equals() to be able to compare two State objects (used in the evaluate() function)
     @Override
     public boolean equals(Object object) {
-        if (object instanceof State otherstate) {
+        if (object instanceof State) {
+            State otherstate = (State) object;
             return this.id == otherstate.id;
         } else {
             return false;
