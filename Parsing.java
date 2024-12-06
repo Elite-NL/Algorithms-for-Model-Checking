@@ -219,9 +219,9 @@ public class Parsing {
         Formula f = parseFormula(line);
 
         if (fixedPoint.equals("mu")) {
-            return new MuFormula(r, f);
+            return new MuFormula(r.variable, f);
         } else { // fixedPoint.equals("nu")
-            return new NuFormula(r, f);
+            return new NuFormula(r.variable, f);
         }
     }
 

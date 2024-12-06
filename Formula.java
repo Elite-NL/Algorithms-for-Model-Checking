@@ -6,19 +6,44 @@
 import java.util.*;
 
 abstract class Formula {
+    // boolean isOpen; // if there exists some unbound variables in the formula, the formula is open
+
     // evaluate the formula on the LTS, this is the entrypoint of the recursive evaluation
-    public Set<State> evaluate(LTS lts) {
+    public Set<State> evaluate(LTS lts, boolean EmersonLei) {
         Map<String, Set<State>> variable_values = new HashMap<>(); // initially there is no defined value for any variable
-        return evaluate(lts, variable_values);
+        resetMuNu(true); // this is to ensure the top-level nu formula is reset before evaluation
+        resetMuNu(false); // this is to ensure the top-level mu formula is reset before evaluation
+        return evaluate(lts, variable_values, EmersonLei);
     }
 
     // every subclass of Formula should implement this method separately
-    public abstract Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values);
+    // if EmersonLei == true, we do not always need to reset the variables of the mu/nu formulas
+    public abstract Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values, boolean EmersonLei);
+
+    // this method is used to reset the stored set of states of all open mu/nu subformulas
+    // if resetNu == false, we should reset all variables defined in all mu subformulas
+    // if resetNu == true, we should reset all variables defined in all nu subformulas
+    public abstract void resetMuNu(boolean resetNu);
+
+    // this function should return the set of unbound variables in the formula
+    // this is used to determine if the formula is closed or not
+    public abstract Set<String> unboundVariables();
+
+    public abstract String toString();
 }
 
 class TrueFormula extends Formula {
-    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values) {
+    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values, boolean EmersonLei) {
         return lts.getStates();
+    }
+
+    // there are no unbound variables in this formula
+    public Set<String> unboundVariables() {
+        return new HashSet<>();
+    }
+
+    public void resetMuNu(boolean resetNu) {
+        // there is nothing to reset in a true formula
     }
 
     public String toString() {
@@ -27,8 +52,17 @@ class TrueFormula extends Formula {
 }
 
 class FalseFormula extends Formula {
-    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values) {
+    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values, boolean EmersonLei) {
         return new HashSet<>();
+    }
+
+    // there are no unbound variables in this formula
+    public Set<String> unboundVariables() {
+        return new HashSet<>();
+    }
+
+    public void resetMuNu(boolean resetNu) {
+        // there is nothing to reset in a false formula
     }
 
     public String toString() {
@@ -43,12 +77,21 @@ class VariableFormula extends Formula {
         this.variable = variable;
     }
 
-    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values) {
+    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values, boolean EmersonLei) {
         Set<State> states = variable_values.get(this.variable);
         if (states == null) {
             throw new UnsupportedOperationException("Variable " + this.variable + " not found in variable_values");
         }
         return states;
+    }
+
+    // there is one unbound variable in this formula
+    public Set<String> unboundVariables() {
+        return new HashSet<>(Collections.singletonList(variable));
+    }
+
+    public void resetMuNu(boolean resetNu) {
+        // there is nothing to reset in a variable formula, this function only resets mu/nu formulas
     }
 
     public String toString() {
@@ -65,11 +108,24 @@ class AndFormula extends Formula {
         this.rightSubFormula = right;
     }
 
-    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values) {
-        Set<State> leftstates = this.leftSubFormula.evaluate(lts, variable_values);
-        Set<State> rightstates = this.rightSubFormula.evaluate(lts, variable_values);
+    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values, boolean EmersonLei) {
+        Set<State> leftstates = this.leftSubFormula.evaluate(lts, variable_values, EmersonLei);
+        Set<State> rightstates = this.rightSubFormula.evaluate(lts, variable_values, EmersonLei);
         leftstates.retainAll(rightstates); // compute the intersection of the two sets
         return leftstates;
+    }
+
+    // propagate the resetNu call to the subformulas
+    public void resetMuNu(boolean resetNu) {
+        leftSubFormula.resetMuNu(resetNu);
+        rightSubFormula.resetMuNu(resetNu);
+    }
+
+    // the unbound variables of an and formula are the union of the unbound variables of the two subformulas
+    public Set<String> unboundVariables() {
+        Set<String> unboundVariables = leftSubFormula.unboundVariables();
+        unboundVariables.addAll(rightSubFormula.unboundVariables());
+        return unboundVariables;
     }
 
     public String toString() {
@@ -86,11 +142,24 @@ class OrFormula extends Formula {
         this.rightSubFormula = right;
     }
 
-    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values) {
-        Set<State> leftstates = this.leftSubFormula.evaluate(lts, variable_values);
-        Set<State> rightstates = this.rightSubFormula.evaluate(lts, variable_values);
+    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values, boolean EmersonLei) {
+        Set<State> leftstates = this.leftSubFormula.evaluate(lts, variable_values, EmersonLei);
+        Set<State> rightstates = this.rightSubFormula.evaluate(lts, variable_values, EmersonLei);
         leftstates.addAll(rightstates); // compute the union of the two sets
         return leftstates;
+    }
+
+    // propagate the resetNu call to the subformulas
+    public void resetMuNu(boolean resetNu) {
+        leftSubFormula.resetMuNu(resetNu);
+        rightSubFormula.resetMuNu(resetNu);
+    }
+
+    // the unbound variables of an or formula are the union of the unbound variables of the two subformulas
+    public Set<String> unboundVariables() {
+        Set<String> unboundVariables = leftSubFormula.unboundVariables();
+        unboundVariables.addAll(rightSubFormula.unboundVariables());
+        return unboundVariables;
     }
 
     public String toString() {
@@ -107,8 +176,8 @@ class DiamondFormula extends Formula {
         this.subFormula = subFormula;
     }
 
-    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values) {
-        Set<State> subformulastates = this.subFormula.evaluate(lts, variable_values);
+    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values, boolean EmersonLei) {
+        Set<State> subformulastates = this.subFormula.evaluate(lts, variable_values, EmersonLei);
         Set<State> result = new HashSet<>();
         for (State state : lts.getStates()) {
             for (Transition transition : state.getOutgoingTransitions(this.action)) { // get all outgoing transitions with the correct action
@@ -119,6 +188,15 @@ class DiamondFormula extends Formula {
             }
         }
         return result;
+    }
+
+    // propagate the resetNu call to the subformula
+    public void resetMuNu(boolean resetNu) {
+        subFormula.resetMuNu(resetNu);
+    }
+
+    public Set<String> unboundVariables() {
+        return subFormula.unboundVariables();
     }
 
     public String toString() {
@@ -135,8 +213,8 @@ class BoxFormula extends Formula {
         this.subFormula = subFormula;
     }
 
-    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values) {
-        Set<State> subformulastates = this.subFormula.evaluate(lts, variable_values);
+    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values, boolean EmersonLei) {
+        Set<State> subformulastates = this.subFormula.evaluate(lts, variable_values, EmersonLei);
         Set<State> result = new HashSet<>();
         for (State state : lts.getStates()) {
             boolean all_transitions_end_in_substates = true;
@@ -153,33 +231,72 @@ class BoxFormula extends Formula {
         return result;
     }
 
+    // propagate the resetNu call to the subformula
+    public void resetMuNu(boolean resetNu) {
+        subFormula.resetMuNu(resetNu);
+    }
+
+    public Set<String> unboundVariables() {
+        return subFormula.unboundVariables();
+    }
+
     public String toString() {
         return "[" + action + "]" + subFormula;
     }
 }
 
 class MuFormula extends Formula {
-    VariableFormula recursionVariable;
+    String recursionVariable;
     Formula subFormula;
 
-    public MuFormula(VariableFormula recursionVariable, Formula subFormula) {
+    boolean isOpen; // stores if the formula is open or closed
+    Set<State> satisfyingStates = null;
+
+    public MuFormula(String recursionVariable, Formula subFormula) {
         this.recursionVariable = recursionVariable;
         this.subFormula = subFormula;
+        this.isOpen = !this.unboundVariables().isEmpty(); // if there exists some unbound variables in the formula, the formula is open
     }
 
-    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values) {
-        // least fixed point, so we start by setting the value of the recursion variable to the empty set
-        Set<State> result = new HashSet<>();
+    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values, boolean EmersonLei) {
+        // if we are in the Emerson-Lei algorithm, we do not always need to reset the variables of the mu formulas
+        // if there is a set of satisfying states defined (and EmersonLei == true), we reuse it by default
+        if (this.satisfyingStates == null || !EmersonLei) {
+            this.satisfyingStates = new HashSet<>();
+        }
 
         do {
             // update the value of the recursion variable (overwriting the previous value)
-            variable_values.put(this.recursionVariable.variable, result);
-            // evaluate the subformula with the new value of the recursion variable
-            result = this.subFormula.evaluate(lts, variable_values);
-            // continue until the result is equal to the value of the recursion variable
-        } while (!result.equals(variable_values.get(this.recursionVariable.variable)));
+            variable_values.put(this.recursionVariable, satisfyingStates);
 
-        return result;
+            if (EmersonLei) {
+                this.subFormula.resetMuNu(true); // reset all open nu subformulas (if they exist) inside this mu formula
+            }
+
+            // evaluate the subformula with the new value of the recursion variable
+            this.satisfyingStates = this.subFormula.evaluate(lts, variable_values, EmersonLei);
+            // continue until the result is equal to the value of the recursion variable
+        } while (!satisfyingStates.equals(variable_values.get(this.recursionVariable)));
+
+        return this.satisfyingStates;
+    }
+
+    // resetNu == false means that we should reset this mu formula and all following mu formulas
+    // resetNu == true means that we should do nothing (this is not a NuFormula)
+    public void resetMuNu(boolean resetNu) {
+        if (!resetNu) { // no need to continue propagating the function call if resetNu == true
+            if (this.isOpen) { // if the mu formula is open, we should reset this variable
+                this.satisfyingStates = null;
+            }
+            subFormula.resetMuNu(false);
+        }
+    }
+
+    // the unbound variables of a mu formula are the unbound variables of the subformula, except for the recursion variable (which is now bound)
+    public Set<String> unboundVariables() {
+        Set<String> unboundVariables = subFormula.unboundVariables();
+        unboundVariables.remove(this.recursionVariable);
+        return unboundVariables;
     }
 
     public String toString() {
@@ -188,27 +305,57 @@ class MuFormula extends Formula {
 }
 
 class NuFormula extends Formula {
-    VariableFormula recursionVariable;
+    String recursionVariable;
     Formula subFormula;
 
-    public NuFormula(VariableFormula recursionVariable, Formula subFormula) {
+    boolean isOpen; // stores if the formula is open or closed
+    Set<State> satisfyingStates = null;
+
+    public NuFormula(String recursionVariable, Formula subFormula) {
         this.recursionVariable = recursionVariable;
         this.subFormula = subFormula;
+        this.isOpen = !this.unboundVariables().isEmpty(); // if there exists some unbound variables in the formula, the formula is open
     }
 
-    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values) {
-        // greatest fixed point, so we start by setting the value of the recursion variable to the set of all states
-        Set<State> result = lts.getStates();
+    public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values, boolean EmersonLei) {
+        // if we are in the Emerson-Lei algorithm, we do not always need to reset the variables of the mu formulas
+        // if there is a set of satisfying states defined (and EmersonLei == true), we reuse it by default
+        if (this.satisfyingStates == null || !EmersonLei) {
+            this.satisfyingStates = lts.getStates();
+        }
 
         do {
             // update the value of the recursion variable (overwriting the previous value)
-            variable_values.put(this.recursionVariable.variable, result);
-            // evaluate the subformula with the new value of the recursion variable
-            result = this.subFormula.evaluate(lts, variable_values);
-            // continue until the result is equal to the value of the recursion variable
-        } while (!result.equals(variable_values.get(this.recursionVariable.variable)));
+            variable_values.put(this.recursionVariable, satisfyingStates);
 
-        return result;
+            if (EmersonLei) {
+                this.subFormula.resetMuNu(false); // reset all open mu subformulas (if they exist) inside this nu formula
+            }
+
+            // evaluate the subformula with the new value of the recursion variable
+            satisfyingStates = this.subFormula.evaluate(lts, variable_values, EmersonLei);
+            // continue until the result is equal to the value of the recursion variable
+        } while (!satisfyingStates.equals(variable_values.get(this.recursionVariable)));
+
+        return satisfyingStates;
+    }
+
+    // resetNu == false means that we should do nothing (this is not a MuFormula)
+    // resetNu == true means that we should reset this nu formula and all following nu formulas
+    public void resetMuNu(boolean resetNu) {
+        if (resetNu) { // no need to continue propagating the function call if resetNu == false
+            if (this.isOpen) { // if the nu formula is open, we should reset this variable
+                this.satisfyingStates = null;
+            }
+            subFormula.resetMuNu(true);
+        }
+    }
+
+    // the unbound variables of a nu formula are the unbound variables of the subformula, except for the recursion variable (which is now bound)
+    public Set<String> unboundVariables() {
+        Set<String> unboundVariables = subFormula.unboundVariables();
+        unboundVariables.remove(this.recursionVariable);
+        return unboundVariables;
     }
 
     public String toString() {
