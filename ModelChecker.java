@@ -13,42 +13,40 @@ public class ModelChecker {
         ModelChecker modelChecker = new ModelChecker();
         Parsing parsing = new Parsing(); // helper class to read LTS and formula from files
 
-        Scanner scanner = new Scanner(System.in);
+        String lts_filename = "dining/dining_11.aut";
+        String formula_filename = "dining/invariantly_inevitably_eat.mcf";
+        boolean EmersonLei = true;
 
-        // choose LTS file
-        System.out.print("Enter the LTS filename (.aut): ");
-        String lts_filename;
-        // lts_filename = scanner.nextLine();
+        if (args.length < 2) { // java ModelChecker
+            Scanner scanner = new Scanner(System.in);
 
-        // TODO remove hardcode before submission
-        lts_filename = "dining/dining_11.aut";
-        // lts_filename = "testcases/boolean/test.aut";
-        // lts_filename = "testcases/modal_operators/test.aut";
-        // lts_filename = "testcases/combined/test.aut";
+            System.out.print("Enter the LTS filename (.aut): ");
+            // lts_filename = scanner.nextLine();
+
+            System.out.print("Enter the mu-calculus formula filename (.mcf): ");
+            // formula_filename = scanner.nextLine();
+
+            System.out.print("Evaluate using the Emerson-Lei algorithm? (True/False): ");
+            // EmersonLei = !scanner.nextLine().toLowerCase().startsWith("f"); // if the user doesn't type "False", we default to the E-L algorithm
+
+            scanner.close();
+        } else if (args.length == 2) { // java ModelChecker <lts_filename> <formula_filename>
+            lts_filename = args[0];
+            formula_filename = args[1];
+            EmersonLei = true; // if no algorithm is specified, we default to Emerson-Lei
+        } else if (args.length >= 3) { // java ModelChecker <lts_filename> <formula_filename> <EmersonLei>
+            lts_filename = args[0];
+            formula_filename = args[1];
+            EmersonLei = !args[2].toLowerCase().startsWith("f"); // if the user doesn't type "False", we default to the E-L algorithm
+        }
 
         modelChecker.lts = parsing.readLTS(lts_filename);
         System.out.println(modelChecker.lts);
-
-        // choose mu-calculus formula file (or read it directly from a string)
-        System.out.print("Enter the mu-calculus formula filename (.mcf): ");
-        String formula_filename;
-        // formula_filename = scanner.nextLine();
-
-        // TODO remove hardcode before submission
-        formula_filename = "dining/invariantly_inevitably_eat.mcf";
-        // formula_filename = "testcases/boolean/form8.mcf";
-        // formula_filename = "testcases/modal_operators/form1.mcf";
-        // formula_filename = "testcases/combined/form2.mcf";
 
         modelChecker.formula = parsing.readFormula(formula_filename);
         // modelChecker.formula = parsing.parse("<tau>true");
         System.out.println(modelChecker.formula);
 
-        // choose evaluation algorithm
-        System.out.print("Evaluate using the Emerson-Lei algorithm? (Yes/No): ");
-        boolean EmersonLei;
-        // EmersonLei = scanner.nextLine().toLowerCase().startsWith("y");
-        EmersonLei = true; // TODO remove hardcode before submission
         System.out.println("Evaluating using the " + ((EmersonLei)?"Emerson-Lei" : "naive") + " algorithm...");
 
         // evaluate the formula on the LTS (and time it)
@@ -68,6 +66,5 @@ public class ModelChecker {
             + (satisfying_states_list.contains(modelChecker.lts.first_state)?"" : "not ")
             + "in the satisfying states");
 
-        scanner.close();
     }
 }
