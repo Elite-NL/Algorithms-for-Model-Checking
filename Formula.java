@@ -6,7 +6,11 @@
 import java.util.*;
 
 abstract class Formula {
-    // boolean isOpen; // if there exists some unbound variables in the formula, the formula is open
+    // returns true if the formula is satisfied by the first state of the LTS, and false otherwise
+    public boolean satisfiesLTS(LTS lts, boolean EmersonLei) {
+        Set<State> satisfying_states = evaluate(lts, EmersonLei);
+        return satisfying_states.contains(lts.first_state);
+    }
 
     // evaluate the formula on the LTS, this is the entrypoint of the recursive evaluation
     public Set<State> evaluate(LTS lts, boolean EmersonLei) {
@@ -178,16 +182,13 @@ class DiamondFormula extends Formula {
 
     public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values, boolean EmersonLei) {
         Set<State> subformulastates = this.subFormula.evaluate(lts, variable_values, EmersonLei);
-        Set<State> result = new HashSet<>();
-        for (State state : lts.getStates()) {
-            for (Transition transition : state.getOutgoingTransitions(this.action)) { // get all outgoing transitions with the correct action
-                if (subformulastates.contains(transition.end_state)) { // if the end state of the transition is in the set of states that satisfy the subformula
-                    result.add(state); // add the start state of the transition to the result
-                    break; // we only need to find one transition that satisfies the subformula, so move to the next candidate state in the LTS
-                }
+        Set<State> satisfyingStates = new HashSet<>(); // by default, the result is empty.
+        for (Transition transition : lts.getTransitions(this.action)) { // get all outgoing transitions with the correct action
+            if (subformulastates.contains(transition.end_state)) { // if the end state of the transition is in the set of states that satisfy the subformula
+                satisfyingStates.add(transition.start_state); // add the start state of the transition to the result
             }
         }
-        return result;
+        return satisfyingStates;
     }
 
     // propagate the resetNu call to the subformula
@@ -215,20 +216,13 @@ class BoxFormula extends Formula {
 
     public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values, boolean EmersonLei) {
         Set<State> subformulastates = this.subFormula.evaluate(lts, variable_values, EmersonLei);
-        Set<State> result = new HashSet<>();
-        for (State state : lts.getStates()) {
-            boolean all_transitions_end_in_substates = true;
-            for (Transition transition : state.getOutgoingTransitions(this.action)) { // get all outgoing transitions with the correct action
-                if (!subformulastates.contains(transition.end_state)) { // if the end state of the transition is not in the set of states that satisfy the subformula
-                    all_transitions_end_in_substates = false;
-                    break; // we only need to find one transition that does not satisfy the subformula
-                }
-            }
-            if (all_transitions_end_in_substates) {
-                result.add(state); // add the start state to the result
+        Set<State> satisfyingStates = lts.getStates(); // by default all states satisfy the formula, we will remove the states that do not satisfy the formula
+        for (Transition transition : lts.getTransitions(this.action)) { // get all outgoing transitions with the correct action
+            if (!subformulastates.contains(transition.end_state)) { // if the end state of the transition is not in the set of states that satisfy the subformula
+                satisfyingStates.remove(transition.start_state); // remove the start state of the transition from the result
             }
         }
-        return result;
+        return satisfyingStates;
     }
 
     // propagate the resetNu call to the subformula

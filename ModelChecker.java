@@ -40,9 +40,11 @@ public class ModelChecker {
             EmersonLei = !args[2].toLowerCase().startsWith("f"); // if the user doesn't type "False", we default to the E-L algorithm
         }
 
+        System.out.println("Parsing the LTS...");
         modelChecker.lts = parsing.readLTS(lts_filename);
         System.out.println(modelChecker.lts);
 
+        System.out.println("Parsing the formula...");
         modelChecker.formula = parsing.readFormula(formula_filename);
         // modelChecker.formula = parsing.parse("<tau>true");
         System.out.println(modelChecker.formula);
@@ -59,7 +61,7 @@ public class ModelChecker {
         satisfying_states_list.sort((state1, state2) -> Integer.compare(state1.id, state2.id));
 
         // print conclusion in the console
-        System.out.println("The formula: " + modelChecker.formula + " is satisfied by the following states of the LTS:");
+        System.out.println("The formula: is satisfied by the following states of the LTS:");
         System.out.println((satisfying_states_list.size() <= 128) ? satisfying_states_list : "Too many states to display (> 128)");
         // System.out.println(satisfying_states_list.contains(modelChecker.lts.first_state));
         System.out.println("The first state of the LTS: " + modelChecker.lts.first_state + " is "

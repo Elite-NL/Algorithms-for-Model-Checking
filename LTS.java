@@ -8,25 +8,9 @@ import java.io.*;
 
 class State {
     int id;
-    Map<String, Set<Transition>> outgoingTransitions = new HashMap<>(); // we store the outgoing transitions as a Map, so it's easy to find all transitions with a certain action
 
     public State(int id) {
         this.id = id;
-    }
-
-    public Set<Transition> getOutgoingTransitions(String action) {
-        Set<Transition> transitions = outgoingTransitions.get(action);
-        if (transitions != null) {
-            return transitions;
-        } else {
-            return new HashSet<>();
-        }
-    }
-
-    public void addOutgoingTransition(Transition transition) {
-        Set<Transition> transitions = this.getOutgoingTransitions(transition.action);
-        transitions.add(transition);
-        outgoingTransitions.put(transition.action, transitions);
     }
 
     // we need to override equals() to be able to compare two State objects (used in the evaluate() function)
@@ -79,7 +63,7 @@ public class LTS {
         this.nr_of_states = nr_of_states;
         this.nr_of_transitions = nr_of_transitions;
 
-        if (first_state_id >= nr_of_states){
+        if (!(0 <= first_state_id && first_state_id < nr_of_states)) {
             throw new IOException("Invalid first state id");
         }
 
@@ -100,7 +84,7 @@ public class LTS {
         return this.states.get(id);
     }
 
-    public Set<Transition> getTransitionsWithAction(String action) {
+    public Set<Transition> getTransitions(String action) {
         Set<Transition> transitionwithlabel = transitions.get(action);
         if (transitionwithlabel != null) {
             return transitionwithlabel;
@@ -114,12 +98,9 @@ public class LTS {
         State endState = getState(end_state_id);
         Transition transition = new Transition(startState, action, endState);
 
-        Set<Transition> transitionsWithAction = this.getTransitionsWithAction(action);
+        Set<Transition> transitionsWithAction = this.getTransitions(action);
         transitionsWithAction.add(transition);
         this.transitions.put(action, transitionsWithAction);
-
-        // add the transition to the outgoingTransitions of the starting state
-        startState.addOutgoingTransition(transition);
     }
 
     public String toString() {
