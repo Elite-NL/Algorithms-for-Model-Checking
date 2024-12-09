@@ -63,29 +63,19 @@ public class Parsing {
      */
     Formula readFormula(String filename) throws IOException {
         File file = new File(filename);
+
+        StringBuilder sb = new StringBuilder(); // we use a StringBuilder to concatenate the lines
+
         Scanner scanner = new Scanner(file);
-
-        Formula formula = null; // should be overwritten in the loop
-
         while (scanner.hasNextLine()) {
-            // Read the next line
             String line = scanner.nextLine();
-
-            // Remove comments, everything after a '%' is a comment
-            // and strip whitespace
-            line = line.split("%")[0].trim();
-
-            // Skip empty lines
-            if (!line.isEmpty()) {
-                formula = parse(line);
-                break;
-            }
+            sb.append(line); // append each line to the StringBuilder
         }
         scanner.close();
 
-        if (formula == null) {
-            throw new IOException("The input file does not contain a formula");
-        }
+        String formula_string = sb.toString(); // convert the StringBuilder to a String
+
+        Formula formula = parse(formula_string); // parse the formula
 
         return formula;
     }
