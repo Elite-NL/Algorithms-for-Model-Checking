@@ -63,7 +63,7 @@ public class ModelChecker {
 
         // print conclusion in the console
         System.out.println("The formula: is satisfied by the following states of the LTS:");
-        System.out.println((satisfying_states_list.size() <= 128) ? satisfying_states_list : "Too many states to display (> 128)");
+        System.out.println((satisfying_states_list.size() <= 128) ? satisfying_states_list : "Too many states to display (128 < "+ satisfying_states_list.size()+")");
         // System.out.println(satisfying_states_list.contains(modelChecker.lts.first_state));
         System.out.println("The first state of the LTS: " + modelChecker.lts.first_state + " is "
             + (satisfying_states_list.contains(modelChecker.lts.first_state)?"" : "not ")

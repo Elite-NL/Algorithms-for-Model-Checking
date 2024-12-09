@@ -93,8 +93,7 @@ class VariableFormula extends Formula {
     }
 
     public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values, boolean EmersonLei) {
-        Set<State> states = new HashSet<>(variable_values.get(this.variable));
-        return states;
+        return new HashSet<>(variable_values.get(this.variable));
     }
 
     // there is one unbound variable in this formula

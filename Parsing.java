@@ -80,9 +80,7 @@ public class Parsing {
 
         String formula_string = sb.toString(); // convert the StringBuilder to a String
 
-        Formula formula = parse(formula_string); // parse the formula
-
-        return formula;
+        return parse(formula_string);
     }
 
     Formula parse(String line) throws IOException {
