@@ -69,6 +69,11 @@ public class Parsing {
         Scanner scanner = new Scanner(file);
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
+
+            // Remove comments, everything after a '%' is a comment
+            // and strip whitespace
+            line = line.split("%")[0].trim();
+
             sb.append(line); // append each line to the StringBuilder
         }
         scanner.close();
