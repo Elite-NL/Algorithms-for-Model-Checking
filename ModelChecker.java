@@ -55,6 +55,7 @@ public class ModelChecker {
         long startTime = System.nanoTime();
         Set<State> satisfying_states = modelChecker.formula.evaluate(modelChecker.lts, EmersonLei);
         System.out.println("Time taken: " + (System.nanoTime() - startTime) / 1e9 + " seconds");
+        System.out.println("Total number of fixpoint iterations: " + modelChecker.formula.iterationCount());
 
         // we sort the states to make the output more readable
         List<State> satisfying_states_list = new ArrayList<>(satisfying_states);

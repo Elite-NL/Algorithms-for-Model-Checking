@@ -33,6 +33,9 @@ abstract class Formula {
     // this is used to determine if the formula is closed or not
     public abstract Set<String> unboundVariables();
 
+    // this function should return the total number of iterations in all fixed-point formulas in the formula
+    public abstract int iterationCount();
+
     public abstract String toString();
 }
 
@@ -48,6 +51,10 @@ class TrueFormula extends Formula {
 
     public void resetMuNu(boolean resetNu) {
         // there is nothing to reset in a true formula
+    }
+
+    public int iterationCount() {
+        return 0;
     }
 
     public String toString() {
@@ -67,6 +74,10 @@ class FalseFormula extends Formula {
 
     public void resetMuNu(boolean resetNu) {
         // there is nothing to reset in a false formula
+    }
+
+    public int iterationCount() {
+        return 0;
     }
 
     public String toString() {
@@ -96,6 +107,10 @@ class VariableFormula extends Formula {
 
     public void resetMuNu(boolean resetNu) {
         // there is nothing to reset in a variable formula, this function only resets mu/nu formulas
+    }
+
+    public int iterationCount() {
+        return 0;
     }
 
     public String toString() {
@@ -132,6 +147,10 @@ class AndFormula extends Formula {
         return unboundVariables;
     }
 
+    public int iterationCount() {
+        return leftSubFormula.iterationCount() + rightSubFormula.iterationCount();
+    }
+
     public String toString() {
         return "(" + leftSubFormula + " && " + rightSubFormula + ")";
     }
@@ -164,6 +183,10 @@ class OrFormula extends Formula {
         Set<String> unboundVariables = leftSubFormula.unboundVariables();
         unboundVariables.addAll(rightSubFormula.unboundVariables());
         return unboundVariables;
+    }
+
+    public int iterationCount() {
+        return leftSubFormula.iterationCount() + rightSubFormula.iterationCount();
     }
 
     public String toString() {
@@ -200,6 +223,10 @@ class DiamondFormula extends Formula {
         return subFormula.unboundVariables();
     }
 
+    public int iterationCount() {
+        return subFormula.iterationCount();
+    }
+
     public String toString() {
         return "<" + action + ">" + subFormula;
     }
@@ -234,6 +261,10 @@ class BoxFormula extends Formula {
         return subFormula.unboundVariables();
     }
 
+    public int iterationCount() {
+        return subFormula.iterationCount();
+    }
+
     public String toString() {
         return "[" + action + "]" + subFormula;
     }
@@ -245,6 +276,8 @@ class MuFormula extends Formula {
 
     boolean isOpen; // stores if the formula is open or closed
     Set<State> satisfyingStates = null;
+
+    int iterationCount = 0; // used to count the number of iterations in the fixed-point algorithm
 
     public MuFormula(String recursionVariable, Formula subFormula) {
         this.recursionVariable = recursionVariable;
@@ -260,6 +293,7 @@ class MuFormula extends Formula {
         }
 
         do {
+            iterationCount++; // increment the iteration count for each iteration of the fixed-point algorithm
             // update the value of the recursion variable (overwriting the previous value)
             variable_values.put(this.recursionVariable, satisfyingStates);
 
@@ -293,6 +327,10 @@ class MuFormula extends Formula {
         return unboundVariables;
     }
 
+    public int iterationCount() {
+        return iterationCount + subFormula.iterationCount();
+    }
+
     public String toString() {
         return "mu " + recursionVariable + "." + subFormula;
     }
@@ -304,6 +342,8 @@ class NuFormula extends Formula {
 
     boolean isOpen; // stores if the formula is open or closed
     Set<State> satisfyingStates = null;
+
+    int iterationCount = 0; // used to count the number of iterations in the fixed-point algorithm
 
     public NuFormula(String recursionVariable, Formula subFormula) {
         this.recursionVariable = recursionVariable;
@@ -319,6 +359,7 @@ class NuFormula extends Formula {
         }
 
         do {
+            iterationCount++; // increment the iteration count for each iteration of the fixed-point algorithm
             // update the value of the recursion variable (overwriting the previous value)
             variable_values.put(this.recursionVariable, satisfyingStates);
 
@@ -350,6 +391,10 @@ class NuFormula extends Formula {
         Set<String> unboundVariables = subFormula.unboundVariables();
         unboundVariables.remove(this.recursionVariable);
         return unboundVariables;
+    }
+
+    public int iterationCount() {
+        return iterationCount + subFormula.iterationCount();
     }
 
     public String toString() {
