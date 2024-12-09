@@ -93,10 +93,7 @@ class VariableFormula extends Formula {
     }
 
     public Set<State> evaluate(LTS lts, Map<String, Set<State>> variable_values, boolean EmersonLei) {
-        Set<State> states = variable_values.get(this.variable);
-        if (states == null) {
-            throw new UnsupportedOperationException("Variable " + this.variable + " not found in variable_values");
-        }
+        Set<State> states = new HashSet<>(variable_values.get(this.variable));
         return states;
     }
 
