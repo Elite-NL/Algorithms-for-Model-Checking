@@ -1,0 +1,10 @@
+% player II wins a play iff she infinitely often manoeuvres the token to position (N, N)
+% and she can always force a win, regardless of player I's strategy to prevent it
+
+% X represents the set of states such that player II can always force a win
+% Y represents the previous approximation of states that have a winning strategy (starting with all states)
+% to get infinite wins, player II must be able to reach the state (N, N) infinitely often
+% so we intersect with states that can reach the previous approximation of states that have a winning strategy
+% this way we cannot stop after reaching the state (N, N) once
+
+nu Y. mu X. (((<won>true || (<choose1>X && [choose1]X)) || <choose2>X) && (<choose1>Y || <choose2>Y))

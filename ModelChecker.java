@@ -13,8 +13,9 @@ public class ModelChecker {
         ModelChecker modelChecker = new ModelChecker();
         Parsing parsing = new Parsing(); // helper class to read LTS and formula from files
 
-        String lts_filename = "boardgame/robots_50.aut";
-        String formula_filename = "boardgame/player_2_has_winning_strategy.mcf";
+        String lts_filename = "boardgame/robots_10.aut";
+        // String formula_filename = "boardgame/player_2_has_winning_strategy.mcf";
+        String formula_filename = "boardgame/player_2_has_infinite_winning_manoeuvres.mcf";
         boolean EmersonLei = true;
 
         if (args.length < 2) { // java ModelChecker

@@ -1,0 +1,25 @@
+transitions = []  # List to store transitions (a, label, b)
+
+# Step 1: Parse the .aut file to extract transitions
+with open('boardgame/robots_450.aut', 'r') as file:
+    for line in file:
+        parts = line.strip().split()
+        if len(parts) == 1:
+            parts2 = (parts[0].split("(")[1].split(")")[0].split(","))
+            a, label, b = parts2
+            label = label.strip("\"")
+            transitions.append((a, label, b))
+
+# Step 2: Find states with the transition (a, "won", b)
+won_transitions = [a for (a, label, b) in transitions if label == "won"]
+
+# Step 3: Find states that are reachable from the states with the transition (a, "won", b)
+# and find loops that lead back to the states with the transition (a, "won", b)
+reachable_states = set()
+for a in won_transitions:
+    reachable_states.add(a)
+    for (x, label, y) in transitions:
+        if x == a:
+            reachable_states.add(y)
+        if y == a:
+            print(f"Back in state that can reach won state with transition {x} --{label}--> {y}")
