@@ -1,9 +1,9 @@
 % note that this mu-formula doesn't imply that player 2 can always force a win (regardless of player 1's strategy to prevent it)
 % this formula only says that there exists some play such that player 2 wins.
 
-% X represents the set of states such that player 2 has the possibility to win
+% X represents the set of states at the start of a round such that player 2 has the possibility to win
 % <won>true is the state that represents (N,N), so player 2 wins in this state
-% we add to this the set of states where player 2 can choose to move to X: <choose2>X
-% we add to this the set of states where player 1 can choose to move to X: <choose1>X
+% <choose2>X is the set of states where player 2 can choose to move to X
+% <choose1><choose2>X is the set of states where player 1 can move to <choose2>X
 
-mu X.(<won>true || (<choose1>X || <choose2>X))
+mu X.(<won>true || <choose1><choose2>X)
