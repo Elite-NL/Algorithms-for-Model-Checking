@@ -1,9 +1,15 @@
 % note that this mu-formula doesn't imply that player 2 can always force a win (regardless of player 1's strategy to prevent it)
-% this formula only says that there exists some play such that player 2 wins.
+% this formula only says that there exists some play such that player 2 eventually wins.
 
-% X represents the set of states at the start of a round such that player 2 has the possibility to win
+% this property corresponds to the CTL formula: EF(<won>true)
+% = mu X.(<won>true || EX(X))       recall that EX(X)=Pre(X)
+% = mu X.(<won>true || Pre(X))      recall that Pre(X) is the set of states that can reach X in one step
+% = mu X.(<won>true || (<choose1>X || <choose2>X || <won>X))      Note that (<won>true || <won>X) is always equal to <won>true
+% = mu X.(<won>true || (<choose1>X || <choose2>X))
+
+% X represents the set of states from which player 2 can reach the winning state (N,N)
 % <won>true is the state that represents (N,N), so player 2 wins in this state
+% <choose1>X is the set of states where player 1 can choose to move to X
 % <choose2>X is the set of states where player 2 can choose to move to X
-% <choose1><choose2>X is the set of states where player 1 can move to <choose2>X
 
-mu X.(<won>true || <choose1><choose2>X)
+mu X.(<won>true || (<choose1>X || <choose2>X))
