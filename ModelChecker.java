@@ -14,7 +14,6 @@ public class ModelChecker {
         Parsing parsing = new Parsing(); // helper class to read LTS and formula from files
 
         String lts_filename = "boardgame/robots_10.aut";
-        // String formula_filename = "boardgame/player_2_has_winning_strategy.mcf";
         String formula_filename = "boardgame/player_2_has_infinite_winning_manoeuvres.mcf";
         boolean EmersonLei = true;
 
@@ -22,13 +21,13 @@ public class ModelChecker {
             Scanner scanner = new Scanner(System.in);
 
             System.out.print("Enter the LTS filename (.aut): ");
-            // lts_filename = scanner.nextLine();
+            lts_filename = scanner.nextLine();
 
             System.out.print("Enter the mu-calculus formula filename (.mcf): ");
-            // formula_filename = scanner.nextLine();
+            formula_filename = scanner.nextLine();
 
             System.out.print("Evaluate using the Emerson-Lei algorithm? (True/False): ");
-            // EmersonLei = !scanner.nextLine().toLowerCase().startsWith("f"); // if the user doesn't type "False", we default to the E-L algorithm
+            EmersonLei = !scanner.nextLine().toLowerCase().startsWith("f"); // if the user doesn't type "False", we default to the E-L algorithm
 
             scanner.close();
         } else if (args.length == 2) { // java ModelChecker <lts_filename> <formula_filename>
