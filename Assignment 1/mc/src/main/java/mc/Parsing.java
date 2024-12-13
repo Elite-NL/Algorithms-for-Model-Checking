@@ -1,8 +1,12 @@
-package mc;
 /*
- * @name(s) Sander van der Leek (1564226), Linda Geraets (1565834), Kenna Janssens (1577271)
- * @date    13-12-2024
+ * Group        10
+ * name         Sander van der Leek, Linda Geraets, Kenna Janssens
+ * student id   1564226, 1565834, 1577271
+ * email        s.j.m.v.d.leek@student.tue.nl, l.j.m.geraets@student.tue.nl, k.janssens@student.tue.nl
+ * date         13-12-2024
  */
+
+package mc;
 
 import java.io.*;
 import java.util.*;
