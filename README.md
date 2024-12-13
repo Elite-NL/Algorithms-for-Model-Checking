@@ -1,4 +1,8 @@
 # Algorithms-for-Model-Checking
+Assignment Group 10:
+- Names:         Sander van der Leek, Linda Geraets, Kenna Janssens
+- Student ids:   1564226, 1565834, 1577271
+- Email:        s.j.m.v.d.leek@student.tue.nl, l.j.m.geraets@student.tue.nl, k.janssens@student.tue.nl
 
 ## Assignment 1:
 Note: To install you need at least java version 11 and a recent version of maven (https://maven.apache.org/download.cgi).
