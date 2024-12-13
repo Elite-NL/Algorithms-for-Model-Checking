@@ -1,3 +1,4 @@
+package mc;
 /*
  * @name(s) Sander van der Leek (1564226), Linda Geraets (1565834), Kenna Janssens (1577271)
  * @date    13-12-2024

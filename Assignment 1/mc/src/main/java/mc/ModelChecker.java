@@ -1,3 +1,4 @@
+package mc;
 /*
  * @name(s) Sander van der Leek (1564226), Linda Geraets (1565834), Kenna Janssens (1577271)
  * @date    13-12-2024
@@ -26,8 +27,8 @@ public class ModelChecker {
             System.out.print("Enter the mu-calculus formula filename (.mcf): ");
             formula_filename = scanner.nextLine();
 
-            System.out.print("Evaluate using the Emerson-Lei algorithm? (True/False): ");
-            EmersonLei = !scanner.nextLine().toLowerCase().startsWith("f"); // if the user doesn't type "False", we default to the E-L algorithm
+            System.out.print("Evaluate using the Emerson-Lei algorithm? (true/false): ");
+            EmersonLei = !scanner.nextLine().toLowerCase().startsWith("f"); // if the user doesn't type "false", we default to the E-L algorithm
 
             scanner.close();
         } else if (args.length == 2) { // java ModelChecker <lts_filename> <formula_filename>
